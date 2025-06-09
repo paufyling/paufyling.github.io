@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventaire des Écrans</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .form-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 5px;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        
+        label {
+            font-weight: bold;
+            min-width: 120px;
+        }
+        
+        input[type="text"], input[type="number"], input[type="file"] {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            flex: 1;
+        }
+        
+        button {
+            background: #007cba;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background: #005a8b;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #007cba;
+            color: white;
+            font-weight: bold;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .image-cell {
+            width: 100px;
+            height: 80px;
+            object-fit: contain;
+            border-radius: 4px;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .delete-btn {
+            background: #dc3545;
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        
+        .delete-btn:hover {
+            background: #c82333;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📺 Inventaire des Écrans - Parc Informatique</h1>
+        
+        <div class="form-section">
+            <h3>Ajouter un nouvel écran</h3>
+            <div class="form-row">
+                <label for="image">Image :</label>
+                <input type="file" id="image" accept="image/*">
+            </div>
+            <div class="form-row">
+                <label for="equipement">Équipement :</label>
+                <input type="text" id="equipement" placeholder="Ex: Bureau 1, Salle réunion...">
+            </div>
+            <div class="form-row">
+                <label for="marque">Marque :</label>
+                <input type="text" id="marque" placeholder="Ex: HP, Dell, Samsung...">
+            </div>
+            <div class="form-row">
+                <label for="modele">Modèle :</label>
+                <input type="text" id="modele" placeholder="Ex: V244h, E2270H...">
+            </div>
+            <div class="form-row">
+                <label for="taille">Taille (pouces) :</label>
+                <input type="text" id="taille" placeholder="Ex: 24, 27, 21.5...">
+            </div>
+            <div class="form-row">
+                <label for="quantite">Quantité :</label>
+                <input type="number" id="quantite" min="1" value="1">
+            </div>
+            <button onclick="ajouterEcran()">Ajouter l'écran</button>
+        </div>
+        
+        <div class="actions">
+            <button onclick="exporterExcel()">📊 Exporter vers Excel</button>
+            <button onclick="viderInventaire()">🗑️ Vider l'inventaire</button>
+        </div>
+        
+        <table id="inventaire">
+            <thead>
+                <tr>
+                    <th>Image</th>
+                    <th>Équipement</th>
+                    <th>Marque</th>
+                    <th>Modèle</th>
+                    <th>Taille</th>
+                    <th>Quantité</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="inventaire-body">
+                <tr>
+                    <td colspan="7" class="empty-state">
+                        Aucun écran ajouté. Commencez par ajouter votre premier écran ci-dessus.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let inventaire = [];
+        
+        // Ajouter l'écran HP V244h depuis l'image fournie
+        window.onload = function() {
+            inventaire = [{
+                id: 1,
+                image: null,
+                equipement: '',
+                marque: 'HP',
+                modele: 'V244h',
+                taille: '24"',
+                quantite: 1
+            }];
+            afficherInventaire();
+        };
+        
+        function ajouterEcran() {
+            const imageFile = document.getElementById('image').files[0];
+            const equipement = document.getElementById('equipement').value.trim();
+            const marque = document.getElementById('marque').value.trim();
+            const modele = document.getElementById('modele').value.trim();
+            const taille = document.getElementById('taille').value.trim();
+            const quantite = parseInt(document.getElementById('quantite').value) || 1;
+            
+            if (!marque || !modele || !taille) {
+                alert('Veuillez remplir tous les champs obligatoires (Marque, Modèle, Taille)');
+                return;
+            }
+            
+            const nouvelEcran = {
+                id: Date.now(),
+                image: imageFile,
+                equipement: equipement,
+                marque: marque,
+                modele: modele,
+                taille: taille,
+                quantite: quantite
+            };
+            
+            inventaire.push(nouvelEcran);
+            afficherInventaire();
+            viderFormulaire();
+        }
+        
+        function viderFormulaire() {
+            document.getElementById('image').value = '';
+            document.getElementById('equipement').value = '';
+            document.getElementById('marque').value = '';
+            document.getElementById('modele').value = '';
+            document.getElementById('taille').value = '';
+            document.getElementById('quantite').value = '1';
+        }
+        
+        function afficherInventaire() {
+            const tbody = document.getElementById('inventaire-body');
+            
+            if (inventaire.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="empty-state">
+                            Aucun écran ajouté. Commencez par ajouter votre premier écran ci-dessus.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = inventaire.map(ecran => {
+                let imageHtml = '<span style="color: #999;">Aucune image</span>';
+                
+                if (ecran.image) {
+                    const imageUrl = URL.createObjectURL(ecran.image);
+                    imageHtml = `<img src="${imageUrl}" alt="${ecran.modele}" class="image-cell">`;
+                }
+                
+                return `
+                    <tr>
+                        <td>${imageHtml}</td>
+                        <td>${ecran.equipement || '-'}</td>
+                        <td>${ecran.marque}</td>
+                        <td>${ecran.modele}</td>
+                        <td>${ecran.taille}</td>
+                        <td>
+                            <input type="number" min="1" value="${ecran.quantite}" 
+                                   style="width: 60px; padding: 4px; text-align: center;"
+                                   onchange="modifierQuantite(${ecran.id}, this.value)">
+                        </td>
+                        <td>
+                            <button class="delete-btn" onclick="supprimerEcran(${ecran.id})">
+                                Supprimer
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function modifierQuantite(id, nouvelleQuantite) {
+            const quantite = parseInt(nouvelleQuantite);
+            if (quantite < 1) {
+                alert('La quantité doit être au moins de 1');
+                afficherInventaire(); // Réafficher pour restaurer l'ancienne valeur
+                return;
+            }
+            
+            const ecran = inventaire.find(e => e.id === id);
+            if (ecran) {
+                ecran.quantite = quantite;
+            }
+        }
+        
+        function supprimerEcran(id) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer cet écran ?')) {
+                inventaire = inventaire.filter(ecran => ecran.id !== id);
+                afficherInventaire();
+            }
+        }
+        
+        function viderInventaire() {
+            if (confirm('Êtes-vous sûr de vouloir vider tout l\'inventaire ?')) {
+                inventaire = [];
+                afficherInventaire();
+            }
+        }
+        
+        function exporterExcel() {
+            if (inventaire.length === 0) {
+                alert('Aucun écran à exporter');
+                return;
+            }
+            
+            // Créer les données pour Excel
+            const donnees = [
+                ['Image', 'Équipement', 'Marque', 'Modèle', 'Taille', 'Quantité', 'Remarques']
+            ];
+            
+            inventaire.forEach(ecran => {
+                donnees.push([
+                    ecran.image ? 'Oui' : 'Non',
+                    ecran.equipement || '',
+                    ecran.marque,
+                    ecran.modele,
+                    ecran.taille,
+                    ecran.quantite,
+                    '' // Colonne remarques vide
+                ]);
+            });
+            
+            // Créer le CSV
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+            donnees.forEach(ligne => {
+                csvContent += ligne.map(cellule => `"${cellule}"`).join(',') + '\n';
+            });
+            
+            // Télécharger le fichier
+            const lien = document.createElement('a');
+            lien.setAttribute('href', encodeURI(csvContent));
+            lien.setAttribute('download', `inventaire_ecrans_${new Date().toISOString().split('T')[0]}.csv`);
+            lien.style.display = 'none';
+            document.body.appendChild(lien);
+            lien.click();
+            document.body.removeChild(lien);
+            
+            alert('Fichier CSV exporté ! Vous pouvez l\'ouvrir avec Excel.');
+        }
+    </script>
+</body>
+</html>
